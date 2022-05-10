@@ -31,7 +31,8 @@ class MoshiPayloadAdapter(moshi: Moshi) : Session.PayloadAdapter {
     private fun createRandomBytes(i: Int) = ByteArray(i).also { SecureRandom().nextBytes(it) }
 
     override fun parse(payload: String, key: String): Session.MethodCall {
-        val encryptedPayload = payloadAdapter.fromJson(payload) ?: throw IllegalArgumentException("Invalid json payload!")
+        val encryptedPayload = payloadAdapter.fromJson(payload)
+            ?: throw IllegalArgumentException("Invalid json payload!")
 
         // TODO verify hmac
 
@@ -107,14 +108,18 @@ class MoshiPayloadAdapter(moshi: Moshi) : Session.PayloadAdapter {
                         else -> it.toCustom()
                     }
                 } catch (e: Exception) {
-                    throw Session.MethodCallException.InvalidRequest(it.getId(), "$json (${e.message ?: "Unknown error"})")
+                    throw Session.MethodCallException.InvalidRequest(
+                        it.getId(),
+                        "$json (${e.message ?: "Unknown error"})"
+                    )
                 }
             } ?: throw IllegalArgumentException("Invalid json")
         }
 
     private fun Map<String, *>.toSessionUpdate(): Session.MethodCall.SessionUpdate {
         val params = this["params"] as? List<*> ?: throw IllegalArgumentException("params missing")
-        val data = params.firstOrNull() as? Map<String, *> ?: throw IllegalArgumentException("Invalid params")
+        val data = params.firstOrNull() as? Map<String, *>
+            ?: throw IllegalArgumentException("Invalid params")
         return Session.MethodCall.SessionUpdate(
             getId(),
             data.extractSessionParams()
@@ -123,7 +128,8 @@ class MoshiPayloadAdapter(moshi: Moshi) : Session.PayloadAdapter {
 
     private fun Map<String, *>.toSendTransaction(): Session.MethodCall.SendTransaction {
         val params = this["params"] as? List<*> ?: throw IllegalArgumentException("params missing")
-        val data = params.firstOrNull() as? Map<*, *> ?: throw IllegalArgumentException("Invalid params")
+        val data =
+            params.firstOrNull() as? Map<*, *> ?: throw IllegalArgumentException("Invalid params")
         val from = data["from"] as? String ?: throw IllegalArgumentException("from key missing")
         val to = data["to"] as? String ?: throw IllegalArgumentException("to key missing")
         val nonce = data["nonce"] as? String ?: (data["nonce"] as? Double)?.toLong()?.toString()
@@ -132,20 +138,31 @@ class MoshiPayloadAdapter(moshi: Moshi) : Session.PayloadAdapter {
         val gasLimit = data["gas"] as? String ?: data["gasLimit"] as? String
         val value = data["value"] as? String ?: "0x0"
         val txData = data["data"] as? String ?: throw IllegalArgumentException("data key missing")
-        return Session.MethodCall.SendTransaction(getId(), from, to, nonce, gasPrice, gasLimit, value, txData)
+        return Session.MethodCall.SendTransaction(
+            getId(),
+            from,
+            to,
+            nonce,
+            gasPrice,
+            gasLimit,
+            value,
+            txData
+        )
     }
 
     private fun Map<String, *>.toSignMessage(): Session.MethodCall.SignMessage {
         val params = this["params"] as? List<*> ?: throw IllegalArgumentException("params missing")
-        val address = params.getOrNull(0) as? String ?: throw IllegalArgumentException("Missing address")
-        val message = params.getOrNull(1) as? String ?: throw IllegalArgumentException("Missing message")
+        val address =
+            params.getOrNull(0) as? String ?: throw IllegalArgumentException("Missing address")
+        val message =
+            params.getOrNull(1) as? String ?: throw IllegalArgumentException("Missing message")
         return Session.MethodCall.SignMessage(getId(), address, message)
     }
 
-    private fun Map<String, *>.toCustom(): Session.MethodCall.Custom {
+    private fun Map<String, *>.toCustom(): Session.MethodCall.SendCustomRequest {
         val method = this["method"] as? String ?: throw IllegalArgumentException("method missing")
         val params = this["params"] as? List<*>
-        return Session.MethodCall.Custom(getId(), method, params)
+        return Session.MethodCall.SendCustomRequest(getId(), method, params)
     }
 
     private fun Map<String, *>.toResponse(): Session.MethodCall.Response {
@@ -170,7 +187,7 @@ class MoshiPayloadAdapter(moshi: Moshi) : Session.PayloadAdapter {
                 is Session.MethodCall.SessionUpdate -> this.toMap()
                 is Session.MethodCall.SendTransaction -> this.toMap()
                 is Session.MethodCall.SignMessage -> this.toMap()
-                is Session.MethodCall.Custom -> this.toMap()
+                is Session.MethodCall.SendCustomRequest -> this.toMap()
             }
         ).toByteArray()
 
@@ -207,7 +224,7 @@ class MoshiPayloadAdapter(moshi: Moshi) : Session.PayloadAdapter {
             error?.let { this["error"] = error.intoMap() }
         }
 
-    private fun Session.MethodCall.Custom.toMap() =
+    private fun Session.MethodCall.SendCustomRequest.toMap() =
         jsonRpcWithList(
             id, method, params ?: emptyList<Any>()
         )

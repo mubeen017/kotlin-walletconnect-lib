@@ -1,5 +1,6 @@
 package org.walletconnect
 
+import org.walletconnect.model.TransactionRequest
 import java.net.URLDecoder
 import java.net.URLEncoder
 
@@ -149,7 +150,7 @@ interface Session {
 
         data class SignMessage(val id: Long, val address: String, val message: String) : MethodCall(id)
 
-        data class Custom(val id: Long, val method: String, val params: List<*>?) : MethodCall(id)
+        data class SendCustomRequest(val id: Long, val method: String, val params: List<*>?) : MethodCall(id)
 
         data class Response(val id: Long, val result: Any?, val error: Error? = null) : MethodCall(id)
     }
