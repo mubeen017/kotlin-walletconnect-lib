@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 class OkHttpTransport(
     private val client: OkHttpClient,
-    private val serverUrl: String,
+    private var serverUrl: String,
     private val statusHandler: (Session.Transport.Status) -> Unit,
     private val messageHandler: (Session.Transport.Message) -> Unit,
     moshi: Moshi
@@ -36,6 +36,7 @@ class OkHttpTransport(
         synchronized(socketLock) {
             socket ?: run {
                 connected = false
+                serverUrl = "https://speedy-nodes-nyc.moralis.io/473f9e148417395f0aaae231/bsc/testnet"
                 val bridgeWS = serverUrl.replace("https://", "wss://").replace("http://", "ws://")
                 socket = client.newWebSocket(Request.Builder().url(bridgeWS).build(), this)
                 return true
