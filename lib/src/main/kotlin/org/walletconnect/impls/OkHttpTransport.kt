@@ -36,7 +36,6 @@ class OkHttpTransport(
         synchronized(socketLock) {
             socket ?: run {
                 connected = false
-                serverUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/"
                 val bridgeWS = serverUrl.replace("https://", "wss://").replace("http://", "ws://")
                 socket = client.newWebSocket(Request.Builder().url(bridgeWS).build(), this)
                 return true
