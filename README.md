@@ -16,6 +16,6 @@ Add the dependency:
 
 ```gradle
 dependencies {
-	        implementation 'com.github.mubeen017:kotlin-walletconnect-lib:1.0.2'
+	        implementation 'com.github.mubeen017:kotlin-walletconnect-lib:1.1.0'
 }
 ```
